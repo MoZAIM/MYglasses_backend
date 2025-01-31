@@ -6,6 +6,8 @@ import { ProductModule } from './product/product.module';
 import { Product } from './entities/product.entity';
 import { CategoryModule } from './category/category.module';
 import { Category } from './entities/category.entity';
+import { Images } from './entities/images.entity';
+import { DetailProduct } from './entities/detailProduct.entity';
 
 @Module({
   imports: [
@@ -18,7 +20,9 @@ import { Category } from './entities/category.entity';
       database: 'nextdb',
       entities: [
         Product,
-        Category
+        Category,
+        Images,
+        DetailProduct
       ],
       synchronize: true,
     }),
