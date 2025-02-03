@@ -1,20 +1,52 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable prettier/prettier */
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('product')
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
+  @UseInterceptors(AnyFilesInterceptor()) // 'files' must match the form-data field name
+  create(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body('product-information') productInformation,
+    // @Request() req,
+  ) {
+    // Process files based on colors
+    const images = {} as { [color: string]: Express.Multer.File[] };
 
-    
-  console.log("🚀 ~ ProductController ~ create ~ createProductDto:", createProductDto)
+    files.map((file) => {
+      const color = file.fieldname;
 
-    
-    return this.productService.create(createProductDto);
+      if (color) {
+        if (!images[color]) {
+          images[color] = [];
+        }
+        images[color].push(file);
+      }
+    });
+
+    const { defaultImage, ...res } = images;
+
+    console.log('🚀 ~ ProductController ~ res:', res);
+
+    const data = JSON.parse(productInformation) as CreateProductDto;
+
+    return this.productService.create(data, res, defaultImage);
   }
 
   @Get()
@@ -24,16 +56,16 @@ export class ProductController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.productService.findOne(+id);
+    return this.productService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productService.update(+id, updateProductDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  //   return this.productService.update(+id, updateProductDto);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.productService.remove(+id);
+    return this.productService.remove(id);
   }
 }
